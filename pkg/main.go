@@ -2,40 +2,36 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 
-	"github.com/juniorrodes/arquitetura-computadores-GA/pkg/instructions"
+	"github.com/juniorrodes/arquitetura-computadores-GA/pkg/pipeline"
 )
 
-type State struct {
-    Pc int
-    InstructionMemory []instructions.MemInstruction
-    Registers [32]int
-}
-
 func main() {
-    state := Init()
+	state := pipeline.NewState()
 
-    for i, instruction := range state.InstructionMemory {
-        fmt.Println("instruction ", i, ": ")
-        fmt.Println(instruction)
-    } 
-}
+	file, err := os.Open("test.asm")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func Init() State {
-    fileContent, err := os.ReadFile("test.asm")
-    if err != nil {
-        log.Fatal(err) 
-    }
-    
-    i, err := instructions.ParseInstructions(fileContent)
-    if err != nil {
-        log.Fatal(err)
-    }
+	buffer, err := io.ReadAll(file)
+	if err = pipeline.ParseInstructions(buffer, state); err != nil {
+		log.Fatal(err)
+	}
 
-    return State{
-        Pc: 0,
-        InstructionMemory: i,
-    }
+	for _, instruction := range state.InstructionMemory {
+		fmt.Println(instruction)
+	}
+
+	for i := 0; i < 20; i++ {
+		state.Fetch()
+		state.Decode()
+		state.Execute()
+		state.MemoryAccess()
+		state.WriteBack()
+		fmt.Print(state)
+	}
 }

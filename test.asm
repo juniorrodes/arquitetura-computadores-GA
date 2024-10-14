@@ -1,6 +1,6 @@
-lw 0 1 -1
-lw 0 2 10
-lw 0 3 1
+lw 0 1 neg1
+lw 0 2 ten
+lw 0 3 one
 noop
 loop add 2 1 2
 noop
@@ -14,3 +14,6 @@ noop
 noop
 noop
 done halt
+neg1 .fill -1
+ten .fill 10
+one .fill 1
