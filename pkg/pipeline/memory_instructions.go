@@ -111,5 +111,5 @@ func newInstruction(line []string) (MemInstruction, error) {
 } 
 
 func (m *MemInstruction) String() string {
-        return fmt.Sprintf("{\n\t\"opCode\": %s,\n\t\"operand1\": %s,\n\t\"operand2\": %s,\n\t\"operand3\": %s,\n}", m.OpCode, m.Operand1, m.Operand2, m.Operand3)
+        return fmt.Sprintf("{\"opCode\": %s,\"operand1\": %s,\"operand2\": %s,\"operand3\": %s}", m.OpCode, m.Operand1, m.Operand2, m.Operand3)
 }

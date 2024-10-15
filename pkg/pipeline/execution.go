@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -17,6 +18,7 @@ const (
 func (s *State) Fetch() {
     instruction := s.InstructionMemory[s.Pc]
     if instruction.OpCode != "halt" {
+        fmt.Println("fetching: ", instruction)
         s.Pc += 1
         execInstruction := ExecInstructions {
             MemInstruction: instruction,
@@ -30,6 +32,7 @@ func (s *State) Fetch() {
 func (s *State) Decode() {
      if s.queue[1] != nil {
         instruction := s.queue[1]
+        fmt.Println("Decoding: ", instruction)
         switch instruction.OpCode {
         case "halt", "noop":
             return
@@ -44,6 +47,7 @@ func (s *State) Decode() {
 func (s *State) Execute() {
     if s.queue[2] != nil && !s.queue[2].Invalid {
         instruction := s.queue[2]
+        fmt.Println("Executing: ", instruction)
         switch instruction.OpCode {
         case "lw", "sw":
             instruction.Temp1 = instruction.Temp1 + instruction.Temp3
@@ -68,6 +72,7 @@ func (s *State) Execute() {
 func (s *State) MemoryAccess() {
     if s.queue[3] != nil && !s.queue[3].Invalid {
         instruction := s.queue[3]
+        fmt.Println("Memory access for: ", instruction)
         switch instruction.OpCode {
         case "lw":
             instruction.Temp3 = *s.MainMemory[instruction.Temp1]
@@ -81,6 +86,7 @@ func (s *State) MemoryAccess() {
 func (s *State) WriteBack() {
     if s.queue[4] != nil && !s.queue[4].Invalid {
         instruction := s.queue[4]
+        fmt.Println("Write back for: ", instruction)
         switch instruction.OpCode {
         case "lw":
             s.Registers[instruction.Temp2] = instruction.Temp3

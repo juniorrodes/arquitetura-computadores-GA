@@ -28,7 +28,7 @@ func (s *State) String() string {
     sb.WriteString(fmt.Sprintf("%d,\r\n", s.Pc))
     sb.WriteString("Registers: {[\r\n")
     for i, r := range s.Registers {
-        sb.WriteString(fmt.Sprintf("\"%d\": %d,\r\n", i, r))
+        sb.WriteString(fmt.Sprintf("\"%d\": %d,", i, r))
     }
     sb.WriteString("]},")
 

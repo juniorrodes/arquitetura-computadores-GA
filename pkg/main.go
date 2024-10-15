@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -33,5 +34,8 @@ func main() {
 		state.MemoryAccess()
 		state.WriteBack()
 		fmt.Print(state)
+		if _, debug := os.LookupEnv("DEBUG"); !debug {
+			bufio.NewReader(os.Stdin).ReadBytes('\n')
+		}
 	}
 }
