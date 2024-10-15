@@ -12,6 +12,7 @@ type State struct {
     Registers         [32]int
     queue             *Queue
     labels            Labels
+    branchTable       [16]bool
 }
 
 func NewState() *State {
