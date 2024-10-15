@@ -5,7 +5,7 @@ type ExecInstructions struct {
     Temp1 int
     Temp2 int
     Temp3 int
-    Valid bool
+    Invalid bool
 }
 
 //func (i *ExecInstructions) LoadWord(state *State) {

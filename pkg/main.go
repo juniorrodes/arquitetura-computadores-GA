@@ -26,7 +26,7 @@ func main() {
 		fmt.Println(instruction)
 	}
 
-	for i := 0; i < 20; i++ {
+	for {
 		state.Fetch()
 		state.Decode()
 		state.Execute()

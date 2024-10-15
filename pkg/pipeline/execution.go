@@ -2,61 +2,102 @@ package pipeline
 
 import (
 	"log"
+	"os"
 	"strconv"
+	"strings"
 )
 
 //import "strconv"
 
+const (
+    ADD = "ADD"
+    SUB = "SUB"
+)
 
 func (s *State) Fetch() {
     instruction := s.InstructionMemory[s.Pc]
-    s.Pc += 1
-    execInstruction := ExecInstructions {
-        MemInstruction: instruction,
+    if instruction.OpCode != "halt" {
+        s.Pc += 1
+        execInstruction := ExecInstructions {
+            MemInstruction: instruction,
+        }
+        s.queue.Push(&execInstruction)
+        return
     }
-    s.queue.Push(&execInstruction)
+    os.Exit(0)
 }
 
 func (s *State) Decode() {
      if s.queue[1] != nil {
         instruction := s.queue[1]
         switch instruction.OpCode {
-            case "lw":
-                operandToTemp(s, instruction, 1)
-                operandToTemp(s, instruction, 2)
-                operandToTemp(s, instruction, 3)
+        case "halt", "noop":
+            return
+        default:
+            operandToTemp(s, instruction, 1)
+            operandToTemp(s, instruction, 2)
+            operandToTemp(s, instruction, 3)
         }
     }   
 }
 
 func (s *State) Execute() {
-    if s.queue[2] != nil {
+    if s.queue[2] != nil && !s.queue[2].Invalid {
         instruction := s.queue[2]
         switch instruction.OpCode {
-            case "lw":
-                instruction.Temp1 = instruction.Temp1 + instruction.Temp3
+        case "lw", "sw":
+            instruction.Temp1 = instruction.Temp1 + instruction.Temp3
+        case "add", "sub":
+            instruction.Temp1 = alu(
+                s.Registers[instruction.Temp1],
+                s.Registers[instruction.Temp2],
+                strings.ToUpper(instruction.OpCode),
+            )
+        case "beq":
+            if s.Registers[instruction.Temp1] == s.Registers[instruction.Temp2] {
+                s.queue[0].Invalid = true
+                s.queue[1].Invalid = true
+                s.Pc = instruction.Temp3
+            }
+        default:
+            return
         }
     }
 }
 
 func (s *State) MemoryAccess() {
-    if s.queue[3] != nil {
+    if s.queue[3] != nil && !s.queue[3].Invalid {
         instruction := s.queue[3]
         switch instruction.OpCode {
-            case "lw":
-                instruction.Temp3 = *s.MainMemory[instruction.Temp1]
+        case "lw":
+            instruction.Temp3 = *s.MainMemory[instruction.Temp1]
+        case "sw":
+            val := s.Registers[instruction.Temp2]
+            s.MainMemory[instruction.Temp1] = &val
         }
     }
 }
 
 func (s *State) WriteBack() {
-    if s.queue[4] != nil {
+    if s.queue[4] != nil && !s.queue[4].Invalid {
         instruction := s.queue[4]
         switch instruction.OpCode {
-            case "lw":
-                s.Registers[instruction.Temp2] = instruction.Temp3
+        case "lw":
+            s.Registers[instruction.Temp2] = instruction.Temp3
+        case "add", "sub":
+            s.Registers[instruction.Temp3] = instruction.Temp1
         }
     }
+}
+
+func alu(valA, valB int, operation string) int {
+    switch operation {
+    case ADD:
+        return valA + valB
+    case SUB:
+        return valA - valB
+    }
+    return 0
 }
 
 func operandToTemp(state *State, instruction *ExecInstructions, index int) {
