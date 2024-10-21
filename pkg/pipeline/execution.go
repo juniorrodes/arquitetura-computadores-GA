@@ -15,6 +15,12 @@ const (
 	SUB = "SUB"
 )
 
+var isPredictionEnabled bool
+
+func init() {
+    _, isPredictionEnabled = os.LookupEnv("PREDICTION")
+}
+
 func (s *State) Fetch() {
     if s.Pc >= len(s.InstructionMemory) {
         s.queue.Push(nil)
@@ -23,6 +29,7 @@ func (s *State) Fetch() {
 	instruction := s.InstructionMemory[s.Pc]
 	fmt.Println("fetching: ", instruction)
 	s.Pc += 1
+    s.executedInstructions += 1
 	execInstruction := ExecInstructions{
 		MemInstruction: instruction,
 	}
@@ -41,9 +48,10 @@ func (s *State) Decode() {
 			operandToTemp(s, instruction, 1)
 			operandToTemp(s, instruction, 2)
 			operandToTemp(s, instruction, 3)
-			if s.branchTable[instruction.Temp3&0xFF] {
+			if s.branchTable[instruction.Temp3&0xFF] && isPredictionEnabled {
 				s.Pc = instruction.Temp3
 				s.queue[0].Invalid = true
+                s.InvalidInstructions += 1
 			}
 		default:
 			operandToTemp(s, instruction, 1)
@@ -68,20 +76,33 @@ func (s *State) Execute() {
 			)
 		case "beq":
 			if s.Registers[instruction.Temp1] == s.Registers[instruction.Temp2] {
+                if !isPredictionEnabled {
+                    if s.queue[0] != nil {
+			    	    s.queue[0].Invalid = true
+                    }
+                    if s.queue[1] != nil {
+			    	    s.queue[1].Invalid = true
+                    }
+                    s.InvalidInstructions += 2
+			    	s.Pc = instruction.Temp3
+                    return
+                }
 				if !s.branchTable[instruction.Temp3] {
                     if s.queue[0] != nil {
 					    s.queue[0].Invalid = true
                     }
                     if s.queue[1] != nil {
 					    s.queue[1].Invalid = true
-                    } 
+                    }
+                    s.InvalidInstructions += 2
 					s.Pc = instruction.Temp3
+				    s.branchTable[instruction.Temp3&0xFF] = true
 				}
-				s.branchTable[instruction.Temp3&0xFF] = true
 			} else {
 				s.branchTable[instruction.Temp3&0xFF] = false
 			}
 		case "halt":
+            fmt.Println("invalid instructions pulled:", s.InvalidInstructions)
 			os.Exit(0)
 		default:
 			return

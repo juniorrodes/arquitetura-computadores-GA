@@ -7,12 +7,14 @@ import (
 
 type State struct {
     Pc int
+    executedInstructions int
     InstructionMemory []MemInstruction
     MainMemory        [100]*int
     Registers         [32]int
     queue             *Queue
     labels            Labels
     branchTable       [16]bool
+    InvalidInstructions int
 }
 
 func NewState() *State {
@@ -32,6 +34,13 @@ func (s *State) String() string {
         sb.WriteString(fmt.Sprintf("\"%d\": %d,", i, r))
     }
     sb.WriteString("]},")
+    sb.WriteString(
+        fmt.Sprintf(
+            "\r\n\"executedInstructions\": %d,\r\n",
+            s.executedInstructions,
+        ),
+    )
+    sb.WriteString("}")
 
     return sb.String()
 }
