@@ -20,7 +20,6 @@ var isPredictionEnabled bool
 func init() {
     _, isPredictionEnabled = os.LookupEnv("PREDICTION")
 }
-
 func (s *State) Fetch() {
     if s.Pc >= len(s.InstructionMemory) {
         s.queue.Push(nil)
